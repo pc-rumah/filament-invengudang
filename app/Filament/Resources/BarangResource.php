@@ -2,21 +2,24 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\BarangResource\Pages;
-use App\Filament\Resources\BarangResource\RelationManagers;
-use App\Models\Barang;
-use App\Models\Kategori;
 use Filament\Forms;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
-use Filament\Forms\Set;
-use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Columns\TextColumn;
+use App\Models\Barang;
+use Filament\Forms\Set;
+use App\Models\Kategori;
+use Filament\Forms\Form;
 use Filament\Tables\Table;
+use Filament\Resources\Resource;
+use Filament\Forms\Components\Select;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\FileUpload;
 use Illuminate\Database\Eloquent\Builder;
+use App\Filament\Resources\BarangResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Filament\Resources\BarangResource\RelationManagers;
+use App\Models\Supplier;
+use Filament\Tables\Columns\ImageColumn;
 
 class BarangResource extends Resource
 {
@@ -29,15 +32,18 @@ class BarangResource extends Resource
     {
         return $form
             ->schema([
-                TextInput::make('kode_barang')
-                    ->label('Kode Barang')
-                    ->readOnly()
-                    ->required(),
+
                 Select::make('supplier_id')
                     ->relationship('supplier', 'nama_pt')
-                    ->required(),
-                TextInput::make('nama_barang')
-                    ->required(),
+                    ->required()
+                    ->reactive()
+                    ->afterStateUpdated(function ($state, Set $set) {
+                        $emailsupplier = Supplier::find($state);
+                        $set('email', $emailsupplier->email ?? null);
+                    }),
+                TextInput::make('email')
+                    ->disabled()
+                    ->label('Email Supplier'),
                 Select::make('kategori_id')
                     ->label('Kategori')
                     ->options(
@@ -57,6 +63,14 @@ class BarangResource extends Resource
                             $set('kode_barang', $kodeBarang);
                         }
                     }),
+                TextInput::make('kode_barang')
+                    ->label('Kode Barang')
+                    ->readOnly()
+                    ->required(),
+                TextInput::make('nama_barang')
+                    ->required(),
+                FileUpload::make('gambar'),
+
                 TextInput::make('harga')
                     ->numeric(),
                 TextInput::make('stok')
@@ -72,6 +86,7 @@ class BarangResource extends Resource
                 TextColumn::make('kode_barang'),
                 TextColumn::make('supplier.nama_pt'),
                 TextColumn::make('nama_barang'),
+                ImageColumn::make('gambar'),
                 TextColumn::make('harga'),
                 TextColumn::make('stok'),
                 TextColumn::make('lokasi_gudang'),

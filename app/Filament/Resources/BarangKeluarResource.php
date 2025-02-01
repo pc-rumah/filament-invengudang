@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\BarangKeluarResource\Pages;
 use App\Filament\Resources\BarangKeluarResource\RelationManagers;
 use Filament\Forms\Components\DatePicker;
+use Filament\Tables\Columns\ImageColumn;
 
 class BarangKeluarResource extends Resource
 {
@@ -51,8 +52,17 @@ class BarangKeluarResource extends Resource
                         $barang = Barang::find($state);
 
                         $set('stok', $barang->stok);
+                    })
+                    ->afterStateHydrated(function ($state, Set $set) {
+                        $barang = Barang::find($state);
+                        if ($barang) {
+                            $set('stok', $barang->stok);
+                        }
                     }),
-                TextInput::make('stok'),
+                TextInput::make('stok')
+                    ->disabled()
+
+                    ->dehydrated(),
                 TextInput::make('jumlah_barang_keluar')
                     ->required()
                     ->label('Jumlah Barang Keluar')
@@ -73,6 +83,7 @@ class BarangKeluarResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('barang.nama_barang'),
+                ImageColumn::make('barang.gambar'),
                 TextColumn::make('jumlah_barang_keluar'),
                 TextColumn::make('penerima'),
                 TextColumn::make('keterangan'),
